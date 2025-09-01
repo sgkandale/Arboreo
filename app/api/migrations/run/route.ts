@@ -1,21 +1,51 @@
-import { exec } from 'child_process';
 import { NextResponse } from 'next/server';
-import path from 'path';
+import sqlite3 from 'sqlite3';
 
 export async function POST(req: Request) {
   return new Promise((resolve) => {
-    const migrationScript = path.join(process.cwd(), 'db', 'migrations.mjs');
-    exec(`node ${migrationScript}`, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Migration error: ${error}`);
-        resolve(NextResponse.json({ error: 'Migration failed', details: error.message }, { status: 500 }));
-        return;
-      }
-      if (stderr) {
-        console.error(`Migration stderr: ${stderr}`);
-      }
-      console.log(`Migration stdout: ${stdout}`);
-      resolve(NextResponse.json({ message: 'Migrations run successfully' }));
+    const db = new sqlite3.Database('/home/shantanu/self/Arboreo/db/database.db');
+
+    db.on('error', (err) => {
+      console.error("Database error:", err.message);
+      resolve(NextResponse.json({ error: 'Database error', details: err.message }, { status: 500 }));
+    });
+
+    db.serialize(() => {
+      db.run(`
+        CREATE TABLE IF NOT EXISTS users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT UNIQUE,
+          password TEXT
+        )
+      `, (err) => {
+        if (err) {
+          console.error("Error creating users table:", err.message);
+          resolve(NextResponse.json({ error: 'Migration failed', details: err.message }, { status: 500 }));
+          return;
+        }
+        console.log("Users table created or already exists.");
+      });
+
+      db.run(`
+        CREATE TABLE IF NOT EXISTS family_data (
+          id INTEGER PRIMARY KEY,
+          name TEXT,
+          gender TEXT,
+          dob TEXT,
+          parents TEXT,
+          spouse TEXT,
+          children TEXT
+        )
+      `, (err) => {
+        if (err) {
+          console.error("Error creating family_data table:", err.message);
+          resolve(NextResponse.json({ error: 'Migration failed', details: err.message }, { status: 500 }));
+          return;
+        }
+        console.log("Family_data table created or already exists.");
+        resolve(NextResponse.json({ message: 'Migrations run successfully' }));
+        db.close(); // Close database after all operations are done
+      });
     });
   });
 }

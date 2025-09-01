@@ -68,13 +68,14 @@ export default function HomePage() {
     const checkSetup = async () => {
       try {
         const res = await fetch('/api/setup/status');
-        if (!res.ok) {
-          const { error } = await res.json();
-          throw new Error(error);
-        }
-        const { setupComplete } = await res.json();
-        if (!setupComplete) {
-          await fetch('/api/migrations/run', { method: 'POST' });
+        const { setupComplete, needsMigration } = await res.json();
+        if (needsMigration) {
+          const migrationRes = await fetch('/api/migrations/run', { method: 'POST' });
+          if (!migrationRes.ok) {
+            const { error, stdout, stderr } = await migrationRes.json();
+            console.error("Migration failed:", error, "stdout:", stdout, "stderr:", stderr);
+            throw new Error(error);
+          }
         }
         setSetupComplete(setupComplete);
       } catch (error) {
@@ -296,7 +297,10 @@ export default function HomePage() {
   }
 
   if (!setupComplete) {
-    return <Setup onSetupComplete={handleLogin} />;
+    return <Setup onSetupComplete={(username) => { 
+      setSetupComplete(true);
+      handleLogin(username); 
+    }} />;
   }
 
   if (!loggedIn) {

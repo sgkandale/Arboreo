@@ -7,7 +7,12 @@ export async function GET() {
   return new Promise((resolve) => {
     db.get('SELECT COUNT(*) as count FROM users', (err, row) => {
       if (err) {
-        resolve(NextResponse.json({ error: err.message }, { status: 500 }));
+        if (err.message.includes('no such table')) {
+          resolve(NextResponse.json({ needsMigration: true }));
+        } else {
+          resolve(NextResponse.json({ error: err.message }, { status: 500 }));
+        }
+        db.close();
         return;
       }
       db.close();
