@@ -10,7 +10,7 @@ import { GenerationalChart } from './components/GenerationalChart';
 import Setup from './components/Setup';
 import Login from './components/Login';
 import { Header } from './components/Header';
-import { Sidebar } from 'lucide-react';
+import { Sidebar } from './components/Sidebar';
 import { EventsSidebar } from './components/EventsSidebar';
 import { FamilyGraph } from './components/FamilyGraph';
 import { Legend } from './components/Legend';

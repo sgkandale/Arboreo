@@ -46,7 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const age = new Date().getFullYear() - new Date(person.dateOfBirth).getFullYear();
   const ageGroup = getAgeGroup(person.dateOfBirth);
-  const personActivities = activities.filter(a => a.personId === person.id);
+  const personActivities = (activities || []).filter(a => a.personId === person.id);
 
   const handleSaveEdit = () => {
     if (editForm.name && editForm.dateOfBirth && editForm.gender) {
