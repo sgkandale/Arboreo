@@ -1,48 +1,55 @@
 import { useState } from 'react';
+import useToast from '../hooks/useToast';
+import Toast from './Toast';
 
 export default function Login({ onLogin }: { onLogin: (username: string) => void }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
   const [isLogin, setIsLogin] = useState(true);
+  const { showToast, toastMessage, show, hide } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
 
-    const res = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
-
-    if (res.ok) {
-      onLogin(username);
-    } else {
-      const { error } = await res.json();
-      setError(error);
+      if (res.ok) {
+        onLogin(username);
+      } else {
+        const { error } = await res.json();
+        throw new Error(error);
+      }
+    } catch (error) {
+      show((error as Error).message);
     }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      if (password !== confirmPassword) {
+        throw new Error('Passwords do not match');
+      }
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
+      const res = await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
 
-    const res = await fetch('/api/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
-
-    if (res.ok) {
-      onLogin(username);
-    } else {
-      const { error } = await res.json();
-      setError(error);
+      if (res.ok) {
+        onLogin(username);
+      } else {
+        const { error } = await res.json();
+        throw new Error(error);
+      }
+    } catch (error) {
+      show((error as Error).message);
     }
   };
 
@@ -58,7 +65,6 @@ export default function Login({ onLogin }: { onLogin: (username: string) => void
             </div>
             <h1 className="text-3xl font-bold text-center mb-2">Welcome to Arboreo</h1>
             <p className="text-center text-gray-600 mb-8">{isLogin ? 'Login to continue' : 'Create an account'}</p>
-            {error && <p className="text-red-500 text-xs italic mb-4">{error}</p>}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
                 Username
@@ -115,6 +121,7 @@ export default function Login({ onLogin }: { onLogin: (username: string) => void
           </form>
         </div>
       </div>
+      <Toast message={toastMessage} show={showToast} onClose={hide} />
     </div>
   );
 }

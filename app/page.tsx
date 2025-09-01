@@ -16,6 +16,8 @@ import { GedcomImportExport } from './components/GedcomImportExport';
 import { FamilyGraph } from './components/FamilyGraph';
 import { Legend } from './components/Legend';
 import { StatisticsDashboard } from './components/StatisticsDashboard';
+import useToast from './hooks/useToast';
+import Toast from './components/Toast';
 
 export default function HomePage() {
   const [people, setPeople] = useState<Person[]>([]);
@@ -31,26 +33,44 @@ export default function HomePage() {
   const [currentUser, setCurrentUser] = useState<Person | null>(null);
   const [showNodeSetupDialog, setShowNodeSetupDialog] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { showToast, toastMessage, show, hide } = useToast();
 
   const handleLogin = async (username: string) => {
-    setLoggedIn(true);
-    const res = await fetch(`/api/user?username=${username}`);
-    const { user, person } = await res.json();
-    setCurrentUser(user);
-    if (!person) {
-      setShowNodeSetupDialog(true);
+    try {
+      setLoggedIn(true);
+      const res = await fetch(`/api/user?username=${username}`);
+      if (!res.ok) {
+        const { error } = await res.json();
+        throw new Error(error);
+      }
+      const { user, person } = await res.json();
+      setCurrentUser(user);
+      if (!person) {
+        setShowNodeSetupDialog(true);
+      }
+    } catch (error) {
+      show((error as Error).message);
     }
   };
 
   useEffect(() => {
     const checkSetup = async () => {
-      const res = await fetch('/api/setup/status');
-      const { setupComplete } = await res.json();
-      if (!setupComplete) {
-        await fetch('/api/migrations/run', { method: 'POST' });
+      try {
+        const res = await fetch('/api/setup/status');
+        if (!res.ok) {
+          const { error } = await res.json();
+          throw new Error(error);
+        }
+        const { setupComplete } = await res.json();
+        if (!setupComplete) {
+          await fetch('/api/migrations/run', { method: 'POST' });
+        }
+        setSetupComplete(setupComplete);
+      } catch (error) {
+        show((error as Error).message);
+      } finally {
+        setLoading(false);
       }
-      setSetupComplete(setupComplete);
-      setLoading(false);
     };
     checkSetup();
   }, []);
@@ -58,10 +78,18 @@ export default function HomePage() {
   useEffect(() => {
     if (loggedIn) {
       const fetchData = async () => {
-        const response = await fetch('/api/family');
-        const data = await response.json();
-        setPeople(data.people);
-        setActivities(data.activities);
+        try {
+          const response = await fetch('/api/family');
+          if (!response.ok) {
+            const { error } = await response.json();
+            throw new Error(error);
+          }
+          const data = await response.json();
+          setPeople(data.people);
+          setActivities(data.activities);
+        } catch (error) {
+          show((error as Error).message);
+        }
       };
       fetchData();
     }
@@ -192,20 +220,27 @@ export default function HomePage() {
   }, [sidebarOpen, eventsSidebarOpen, handleCloseSidebar, handleCloseEventsSidebar]);
 
   const handleNodeSave = async (person: Person) => {
-    const res = await fetch('/api/family/update', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(person),
-    });
+    try {
+      const res = await fetch('/api/family/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(person),
+      });
 
-    if (res.ok) {
-      setShowNodeSetupDialog(false);
-      const fetchData = async () => {
-        const response = await fetch('/api/family');
-        const data = await response.json();
-        setPeople(data.people);
-      };
-      fetchData();
+      if (res.ok) {
+        setShowNodeSetupDialog(false);
+        const fetchData = async () => {
+          const response = await fetch('/api/family');
+          const data = await response.json();
+          setPeople(data.people);
+        };
+        fetchData();
+      } else {
+        const { error } = await res.json();
+        throw new Error(error);
+      }
+    } catch (error) {
+      show((error as Error).message);
     }
   };
 
@@ -317,6 +352,7 @@ export default function HomePage() {
           <NodeSetupDialog user={currentUser} onSave={handleNodeSave} />
         )}
       </div>
+      <Toast message={toastMessage} show={showToast} onClose={hide} />
     </div>
   );
 }

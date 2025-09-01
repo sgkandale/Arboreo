@@ -1,29 +1,34 @@
 import { useState } from 'react';
+import useToast from '../hooks/useToast';
+import Toast from './Toast';
 
 export default function Setup({ onSetupComplete }: { onSetupComplete: (username: string) => void }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
+  const { showToast, toastMessage, show, hide } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
+    try {
+      if (password !== confirmPassword) {
+        throw new Error('Passwords do not match');
+      }
 
-    const res = await fetch('/api/setup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
+      const res = await fetch('/api/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
 
-    if (res.ok) {
-      onSetupComplete(username);
-    } else {
-      const { error } = await res.json();
-      setError(error);
+      if (res.ok) {
+        onSetupComplete(username);
+      } else {
+        const { error } = await res.json();
+        throw new Error(error);
+      }
+    } catch (error) {
+      show((error as Error).message);
     }
   };
 
@@ -39,7 +44,6 @@ export default function Setup({ onSetupComplete }: { onSetupComplete: (username:
             </div>
             <h1 className="text-3xl font-bold text-center mb-2">Create Your Arboreo Account</h1>
             <p className="text-center text-gray-600 mb-8">Get started with your family tree</p>
-            {error && <p className="text-red-500 text-xs italic mb-4">{error}</p>}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
                 Username
@@ -87,6 +91,7 @@ export default function Setup({ onSetupComplete }: { onSetupComplete: (username:
           </form>
         </div>
       </div>
+      <Toast message={toastMessage} show={showToast} onClose={hide} />
     </div>
   );
 }
