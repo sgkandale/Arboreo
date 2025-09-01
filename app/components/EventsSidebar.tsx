@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { X, Calendar, Gift, Heart } from 'lucide-react';
 import { Event, Person } from '../types/FamilyTree';

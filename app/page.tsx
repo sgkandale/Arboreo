@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { Header } from './components/Header';
 import { FamilyGraph } from './components/FamilyGraph';
@@ -8,15 +10,14 @@ import { StatisticsDashboard } from './components/StatisticsDashboard';
 import { EventsSidebar } from './components/EventsSidebar';
 import { GedcomImportExport } from './components/GedcomImportExport';
 import { Legend } from './components/Legend';
-import { Person, ViewMode } from './types/FamilyTree';
-import { samplePeople, sampleActivities } from './data/familyData';
+import { Person, ViewMode, Activity } from './types/FamilyTree';
 import { generateUpcomingEvents } from './utils/graphUtils';
 import { requestNotificationPermission, scheduleEventNotifications } from './utils/notifications';
 import { v4 as uuidv4 } from 'uuid';
 
-function App() {
-  const [people, setPeople] = useState<Person[]>(samplePeople);
-  const [activities, setActivities] = useState(sampleActivities);
+export default function HomePage() {
+  const [people, setPeople] = useState<Person[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [eventsSidebarOpen, setEventsSidebarOpen] = useState(false);
@@ -24,16 +25,28 @@ function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('graph');
   const [darkMode, setDarkMode] = useState(false);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await fetch('/api/family');
+      const data = await response.json();
+      setPeople(data.people);
+      setActivities(data.activities);
+    };
+    fetchData();
+  }, []);
+
   const upcomingEvents = generateUpcomingEvents(people);
 
   // Request notification permission on app load
   useEffect(() => {
-    requestNotificationPermission().then(granted => {
-      if (granted) {
-        scheduleEventNotifications(upcomingEvents, people);
-      }
-    });
-  }, [people]);
+    if (people.length > 0) {
+      requestNotificationPermission().then(granted => {
+        if (granted) {
+          scheduleEventNotifications(upcomingEvents, people);
+        }
+      });
+    }
+  }, [people, upcomingEvents]);
 
   const handlePersonSelect = useCallback((person: Person) => {
     setSelectedPerson(person);
@@ -238,5 +251,3 @@ function App() {
     </div>
   );
 }
-
-export default App;

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Download, Upload, FileText } from 'lucide-react';
 import { Person } from '../types/FamilyTree';
@@ -172,9 +174,7 @@ export const GedcomImportExport: React.FC<GedcomImportExportProps> = ({
   };
 
   return (
-    <div className={`fixed bottom-4 right-4 ${
-      darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-    } border rounded-lg shadow-lg p-4 z-30`}>
+    <div className={`fixed bottom-4 right-4 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg shadow-lg p-4 z-30`}>
       <div className="flex items-center space-x-2 mb-3">
         <FileText className="w-5 h-5 text-purple-600" />
         <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>

@@ -1,9 +1,11 @@
+'use client';
+
 import React from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
 import { Doughnut, Bar } from 'react-chartjs-2';
 import { Person } from '../types/FamilyTree';
 import { calculateFamilyStatistics } from '../utils/graphUtils';
-import { Users, Heart, Calendar, TrendingUp } from 'lucide-react';
+import { Users, Heart, Calendar } from 'lucide-react';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
@@ -92,7 +94,7 @@ export const StatisticsDashboard: React.FC<StatisticsDashboardProps> = ({ people
       </h2>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div className={`p-6 rounded-lg border ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
@@ -138,22 +140,6 @@ export const StatisticsDashboard: React.FC<StatisticsDashboardProps> = ({ people
               </p>
             </div>
             <Calendar className="w-8 h-8 text-blue-600" />
-          </div>
-        </div>
-
-        <div className={`p-6 rounded-lg border ${
-          darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-        }`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Generations
-              </p>
-              <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                {getAncestors(selectedPerson).length}
-              </p>
-            </div>
-            <TrendingUp className="w-8 h-8 text-orange-600" />
           </div>
         </div>
       </div>

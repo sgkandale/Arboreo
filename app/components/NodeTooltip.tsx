@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Person } from '../types/FamilyTree';
 import { getAgeGroup, getDefaultProfilePic } from '../utils/graphUtils';

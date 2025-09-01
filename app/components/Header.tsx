@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Users, Calendar, Moon, Sun, ChevronDown, BarChart3, TreePine, Bell } from 'lucide-react';
 import { ViewMode } from '../types/FamilyTree';

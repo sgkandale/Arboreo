@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { X, Edit, Plus, User, Phone, Mail, Calendar, MapPin, Briefcase, Heart, Users } from 'lucide-react';
 import { Person, Activity } from '../types/FamilyTree';
