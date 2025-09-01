@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function Setup({ onSetupComplete }: { onSetupComplete: () => void }) {
+export default function Setup({ onSetupComplete }: { onSetupComplete: (username: string) => void }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -20,7 +20,7 @@ export default function Setup({ onSetupComplete }: { onSetupComplete: () => void
     });
 
     if (res.ok) {
-      onSetupComplete();
+      onSetupComplete(username);
     } else {
       const { error } = await res.json();
       setError(error);

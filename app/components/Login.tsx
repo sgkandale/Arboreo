@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function Login({ onLogin }: { onLogin: () => void }) {
+export default function Login({ onLogin }: { onLogin: (username: string) => void }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -17,7 +17,7 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
     });
 
     if (res.ok) {
-      onLogin();
+      onLogin(username);
     } else {
       const { error } = await res.json();
       setError(error);
@@ -39,7 +39,7 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
     });
 
     if (res.ok) {
-      onLogin();
+      onLogin(username);
     } else {
       const { error } = await res.json();
       setError(error);

@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback, useEffect } from 'react';
-import { Header } from './components/Header';
-import { FamilyGraph } from './components/FamilyGraph';
-import { Sidebar } from './components/Sidebar';
-import { Timeline } from './components/Timeline';
-import { GenerationalChart } from './components/GenerationalChart';
-import { StatisticsDashboard } from './components/StatisticsDashboard';
-import { EventsSidebar } from './components/EventsSidebar';
-import { GedcomImportExport } from './components/GedcomImportExport';
-import { Legend } from './components/Legend';
-import { Person, ViewMode, Activity } from './types/FamilyTree';
+import { useCallback, useEffect, useState } from 'react';
+import NodeSetupDialog from './components/NodeSetupDialog';
+import { Activity, Person, ViewMode } from './types/FamilyTree';
 import { generateUpcomingEvents } from './utils/graphUtils';
 import { requestNotificationPermission, scheduleEventNotifications } from './utils/notifications';
-import { v4 as uuidv4 } from 'uuid';
+import { Timeline } from './components/Timeline';
+import { GenerationalChart } from './components/GenerationalChart';
 import Setup from './components/Setup';
 import Login from './components/Login';
+import { Header } from './components/Header';
+import { Sidebar } from 'lucide-react';
+import { EventsSidebar } from './components/EventsSidebar';
+import { GedcomImportExport } from './components/GedcomImportExport';
+import { FamilyGraph } from './components/FamilyGraph';
+import { Legend } from './components/Legend';
+import { StatisticsDashboard } from './components/StatisticsDashboard';
 
 export default function HomePage() {
   const [people, setPeople] = useState<Person[]>([]);
@@ -28,7 +28,19 @@ export default function HomePage() {
   const [darkMode, setDarkMode] = useState(false);
   const [setupComplete, setSetupComplete] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState<Person | null>(null);
+  const [showNodeSetupDialog, setShowNodeSetupDialog] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const handleLogin = async (username: string) => {
+    setLoggedIn(true);
+    const res = await fetch(`/api/user?username=${username}`);
+    const { user, person } = await res.json();
+    setCurrentUser(user);
+    if (!person) {
+      setShowNodeSetupDialog(true);
+    }
+  };
 
   useEffect(() => {
     const checkSetup = async () => {
@@ -179,6 +191,24 @@ export default function HomePage() {
     }
   }, [sidebarOpen, eventsSidebarOpen, handleCloseSidebar, handleCloseEventsSidebar]);
 
+  const handleNodeSave = async (person: Person) => {
+    const res = await fetch('/api/family/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(person),
+    });
+
+    if (res.ok) {
+      setShowNodeSetupDialog(false);
+      const fetchData = async () => {
+        const response = await fetch('/api/family');
+        const data = await response.json();
+        setPeople(data.people);
+      };
+      fetchData();
+    }
+  };
+
   const renderMainContent = () => {
     switch (viewMode) {
       case 'timeline':
@@ -231,11 +261,11 @@ export default function HomePage() {
   }
 
   if (!setupComplete) {
-    return <Setup onSetupComplete={() => { setSetupComplete(true); setLoggedIn(true); }} />;
+    return <Setup onSetupComplete={handleLogin} />;
   }
 
   if (!loggedIn) {
-    return <Login onLogin={() => setLoggedIn(true)} />;
+    return <Login onLogin={handleLogin} />;
   }
 
   return (
@@ -282,6 +312,10 @@ export default function HomePage() {
           darkMode={darkMode}
           onImport={handleGedcomImport}
         />
+
+        {showNodeSetupDialog && currentUser && (
+          <NodeSetupDialog user={currentUser} onSave={handleNodeSave} />
+        )}
       </div>
     </div>
   );

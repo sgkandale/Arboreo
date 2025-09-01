@@ -16,6 +16,7 @@ db.serialize(() => {
       id INTEGER PRIMARY KEY,
       name TEXT,
       gender TEXT,
+      dob TEXT,
       parents TEXT,
       spouse TEXT,
       children TEXT
