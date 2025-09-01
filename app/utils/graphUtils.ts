@@ -55,31 +55,43 @@ export const buildFamilyGraph = (people: Person[]): { nodes: FamilyNode[], links
   const links: FamilyLink[] = [];
 
   people.forEach(person => {
-    person.relationships.forEach(rel => {
-      const target = people.find(p => p.id === rel.personId);
+    // Add spouse links
+    person.spouse.forEach(spouseId => {
+      const target = people.find(p => p.id === spouseId);
       if (target) {
-        let linkType: 'spouse' | 'parent-child' | 'sibling' = 'parent-child';
-        
-        if (rel.type === 'spouse') {
-          linkType = 'spouse';
-        } else if (rel.type === 'sibling') {
-          linkType = 'sibling';
-        } else if (rel.type === 'parent' || rel.type === 'child') {
-          linkType = 'parent-child';
-        }
-
-        // Avoid duplicate links
         const existingLink = links.find(link => 
-          (link.source === person.id && link.target === rel.personId) ||
-          (link.source === rel.personId && link.target === person.id)
+          (link.source === person.id && link.target === spouseId && link.type === 'spouse') ||
+          (link.source === spouseId && link.target === person.id && link.type === 'spouse')
         );
-
         if (!existingLink) {
-          links.push({
-            source: person.id,
-            target: rel.personId,
-            type: linkType
-          });
+          links.push({ source: person.id, target: spouseId, type: 'spouse' });
+        }
+      }
+    });
+
+    // Add parent-child links
+    person.children.forEach(childId => {
+      const target = people.find(p => p.id === childId);
+      if (target) {
+        const existingLink = links.find(link => 
+          (link.source === person.id && link.target === childId && link.type === 'parent-child') ||
+          (link.source === childId && link.target === person.id && link.type === 'parent-child')
+        );
+        if (!existingLink) {
+          links.push({ source: person.id, target: childId, type: 'parent-child' });
+        }
+      }
+    });
+
+    person.parents.forEach(parentId => {
+      const target = people.find(p => p.id === parentId);
+      if (target) {
+        const existingLink = links.find(link => 
+          (link.source === person.id && link.target === parentId && link.type === 'parent-child') ||
+          (link.source === parentId && link.target === person.id && link.type === 'parent-child')
+        );
+        if (!existingLink) {
+          links.push({ source: parentId, target: person.id, type: 'parent-child' });
         }
       }
     });

@@ -1,8 +1,6 @@
-'use client';
-
-import React, { useState, useRef, useEffect } from 'react';
-import { Search, Users, Calendar, Moon, Sun, ChevronDown, BarChart3, TreePine, Bell } from 'lucide-react';
+import { Search, Users, Calendar, Moon, Sun, ChevronDown, BarChart3, TreePine, Bell, LogOut } from 'lucide-react';
 import { ViewMode } from '../types/FamilyTree';
+import { useEffect, useRef, useState } from 'react';
 
 interface HeaderProps {
   searchTerm: string;
@@ -12,6 +10,7 @@ interface HeaderProps {
   darkMode: boolean;
   onDarkModeToggle: () => void;
   onEventsToggle: () => void;
+  onLogout: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -21,7 +20,8 @@ export const Header: React.FC<HeaderProps> = ({
   onViewModeChange,
   darkMode,
   onDarkModeToggle,
-  onEventsToggle
+  onEventsToggle,
+  onLogout
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -135,8 +135,20 @@ export const Header: React.FC<HeaderProps> = ({
           >
             {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
+
+          <button
+            onClick={onLogout}
+            className={`p-2 rounded-lg transition-colors ${
+              darkMode 
+                ? 'bg-gray-800 text-red-400 hover:bg-gray-700' 
+                : 'bg-gray-100 text-red-600 hover:bg-gray-200'
+            }`}
+            title="Logout"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
         </div>
       </div>
     </header>
   );
-};
+}

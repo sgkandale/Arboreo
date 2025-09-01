@@ -14,6 +14,8 @@ import { Person, ViewMode, Activity } from './types/FamilyTree';
 import { generateUpcomingEvents } from './utils/graphUtils';
 import { requestNotificationPermission, scheduleEventNotifications } from './utils/notifications';
 import { v4 as uuidv4 } from 'uuid';
+import Setup from './components/Setup';
+import Login from './components/Login';
 
 export default function HomePage() {
   const [people, setPeople] = useState<Person[]>([]);
@@ -24,16 +26,34 @@ export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('graph');
   const [darkMode, setDarkMode] = useState(false);
+  const [setupComplete, setSetupComplete] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const response = await fetch('/api/family');
-      const data = await response.json();
-      setPeople(data.people);
-      setActivities(data.activities);
+    const checkSetup = async () => {
+      const res = await fetch('/api/setup/status');
+      const { setupComplete } = await res.json();
+      if (!setupComplete) {
+        await fetch('/api/migrations/run', { method: 'POST' });
+      }
+      setSetupComplete(setupComplete);
+      setLoading(false);
     };
-    fetchData();
+    checkSetup();
   }, []);
+
+  useEffect(() => {
+    if (loggedIn) {
+      const fetchData = async () => {
+        const response = await fetch('/api/family');
+        const data = await response.json();
+        setPeople(data.people);
+        setActivities(data.activities);
+      };
+      fetchData();
+    }
+  }, [loggedIn]);
 
   const upcomingEvents = generateUpcomingEvents(people);
 
@@ -85,32 +105,27 @@ export default function HomePage() {
       name: relation.name,
       dateOfBirth: relation.dateOfBirth,
       gender: relation.gender as 'male' | 'female' | 'trans',
-      relationships: [
-        {
-          id: reverseRelationshipId,
-          type: relation.type === 'child' ? 'parent' : 
-                relation.type === 'parent' ? 'child' :
-                relation.type,
-          personId: personId
-        } as any
-      ]
+      parents: [],
+      spouse: [],
+      children: [],
     };
 
     // Update existing person's relationships
     setPeople(prev => {
       const updated = prev.map(p => {
         if (p.id === personId) {
-          return {
-            ...p,
-            relationships: [
-              ...p.relationships,
-              {
-                id: relationshipId,
-                type: relation.type,
-                personId: newPersonId
-              } as any
-            ]
-          };
+          const updatedPerson = { ...p };
+          if (relation.type === 'child') {
+            updatedPerson.children = [...updatedPerson.children, newPersonId];
+            newPerson.parents = [...newPerson.parents, personId];
+          } else if (relation.type === 'parent') {
+            updatedPerson.parents = [...updatedPerson.parents, newPersonId];
+            newPerson.children = [...newPerson.children, personId];
+          } else if (relation.type === 'spouse') {
+            updatedPerson.spouse = [...updatedPerson.spouse, newPersonId];
+            newPerson.spouse = [...newPerson.spouse, personId];
+          }
+          return updatedPerson;
         }
         return p;
       });
@@ -204,6 +219,25 @@ export default function HomePage() {
     }
   };
 
+  const handleLogout = useCallback(() => {
+    setLoggedIn(false);
+    setPeople([]);
+    setActivities([]);
+    setSelectedPerson(null);
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!setupComplete) {
+    return <Setup onSetupComplete={() => setSetupComplete(true)} />;
+  }
+
+  if (!loggedIn) {
+    return <Login onLogin={() => setLoggedIn(true)} />;
+  }
+
   return (
     <div className={`h-screen flex flex-col ${darkMode ? 'bg-gray-900' : 'bg-white'}`}>
       <Header
@@ -214,6 +248,7 @@ export default function HomePage() {
         darkMode={darkMode}
         onDarkModeToggle={() => setDarkMode(!darkMode)}
         onEventsToggle={handleEventsToggle}
+        onLogout={handleLogout}
       />
       
       <div 

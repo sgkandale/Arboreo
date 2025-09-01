@@ -14,13 +14,9 @@ export interface Person {
   };
   photo?: string;
   isMainUser?: boolean;
-  relationships: Relationship[];
-}
-
-export interface Relationship {
-  id: string;
-  type: 'spouse' | 'parent' | 'child' | 'sibling';
-  personId: string;
+  parents: string[];
+  spouse: string[];
+  children: string[];
 }
 
 export interface FamilyNode extends Person {
@@ -30,11 +26,7 @@ export interface FamilyNode extends Person {
   fy?: number;
 }
 
-export interface FamilyLink {
-  source: string | FamilyNode;
-  target: string | FamilyNode;
-  type: 'spouse' | 'parent-child' | 'sibling';
-}
+
 
 export interface Activity {
   id: string;

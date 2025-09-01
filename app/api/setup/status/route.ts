@@ -5,19 +5,13 @@ export async function GET() {
   const db = new sqlite3.Database('/home/shantanu/self/Arboreo/db/database.db');
 
   return new Promise((resolve) => {
-    db.all('SELECT * FROM family_data', (err, rows) => {
+    db.get('SELECT COUNT(*) as count FROM users', (err, row) => {
       if (err) {
         resolve(NextResponse.json({ error: err.message }, { status: 500 }));
         return;
       }
       db.close();
-      const data = rows.map(row => ({
-        ...row,
-        parents: JSON.parse(row.parents),
-        spouse: JSON.parse(row.spouse),
-        children: JSON.parse(row.children),
-      }))
-      resolve(NextResponse.json({people: data}));
+      resolve(NextResponse.json({ setupComplete: row.count > 0 }));
     });
   });
 }

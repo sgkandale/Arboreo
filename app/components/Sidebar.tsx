@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { X, Edit, Plus, User, Phone, Mail, Calendar, MapPin, Briefcase, Heart, Users } from 'lucide-react';
 import { Person, Activity } from '../types/FamilyTree';
-import { getAgeGroup } from '../utils/graphUtils';
+import { getAgeGroup, getDefaultProfilePic } from '../utils/graphUtils';
 
 interface SidebarProps {
   person: Person | null;
@@ -71,25 +71,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
       children: [] as Person[]
     };
 
-    person.relationships.forEach(rel => {
-      const relatedPerson = people.find(p => p.id === rel.personId);
+    // Populate parents
+    person.parents.forEach(parentId => {
+      const relatedPerson = people.find(p => p.id === parentId);
       if (relatedPerson) {
-        switch (rel.type) {
-          case 'parent':
-            family.parents.push(relatedPerson);
-            break;
-          case 'sibling':
-            family.siblings.push(relatedPerson);
-            break;
-          case 'spouse':
-            family.spouse = relatedPerson;
-            break;
-          case 'child':
-            family.children.push(relatedPerson);
-            break;
-        }
+        family.parents.push(relatedPerson);
       }
     });
+
+    // Populate spouse
+    if (person.spouse.length > 0) {
+      const spouseId = person.spouse[0]; // Assuming single spouse for simplicity
+      const relatedPerson = people.find(p => p.id === spouseId);
+      if (relatedPerson) {
+        family.spouse = relatedPerson;
+      }
+    }
+
+    // Populate children
+    person.children.forEach(childId => {
+      const relatedPerson = people.find(p => p.id === childId);
+      if (relatedPerson) {
+        family.children.push(relatedPerson);
+      }
+    });
+
+    // Populate siblings (more complex, requires checking common parents)
+    // For now, we can skip this or implement a simpler version if needed
 
     return family;
   };
