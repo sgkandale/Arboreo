@@ -231,7 +231,7 @@ export default function HomePage() {
   }
 
   if (!setupComplete) {
-    return <Setup onSetupComplete={() => setSetupComplete(true)} />;
+    return <Setup onSetupComplete={() => { setSetupComplete(true); setLoggedIn(true); }} />;
   }
 
   if (!loggedIn) {
