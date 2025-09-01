@@ -1,20 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Download, Upload, FileText } from 'lucide-react';
+import { useState } from 'react';
 import { Person } from '../types/FamilyTree';
 
-interface GedcomImportExportProps {
-  people: Person[];
-  darkMode: boolean;
-  onImport: (people: Person[]) => void;
-}
-
-export const GedcomImportExport: React.FC<GedcomImportExportProps> = ({
-  people,
-  darkMode,
-  onImport
-}) => {
+export default function useGedcom(people: Person[], onImport: (people: Person[]) => void) {
   const [importing, setImporting] = useState(false);
 
   const exportToGedcom = () => {
@@ -51,9 +40,9 @@ export const GedcomImportExport: React.FC<GedcomImportExportProps> = ({
     const families: { [key: string]: { spouse1: string; spouse2: string; children: string[] } } = {};
     
     people.forEach((person, index) => {
-      const spouseRel = person.relationships.find(rel => rel.type === 'spouse');
-      if (spouseRel) {
-        const spouseIndex = people.findIndex(p => p.id === spouseRel.personId);
+      const spouseRel = person.spouse;
+      if (spouseRel && spouseRel.length > 0) {
+        const spouseIndex = people.findIndex(p => p.id === spouseRel[0]);
         if (spouseIndex !== -1) {
           const familyKey = [index + 1, spouseIndex + 1].sort().join('-');
           if (!families[familyKey]) {
@@ -117,7 +106,9 @@ export const GedcomImportExport: React.FC<GedcomImportExportProps> = ({
                 location: currentPerson.location,
                 profession: currentPerson.profession,
                 biography: currentPerson.biography,
-                relationships: []
+                parents: [],
+                spouse: [],
+                children: [],
               } as Person);
             }
             currentPerson = {};
@@ -155,7 +146,9 @@ export const GedcomImportExport: React.FC<GedcomImportExportProps> = ({
             location: currentPerson.location,
             profession: currentPerson.profession,
             biography: currentPerson.biography,
-            relationships: []
+            parents: [],
+            spouse: [],
+            children: [],
           } as Person);
         }
 
@@ -173,36 +166,17 @@ export const GedcomImportExport: React.FC<GedcomImportExportProps> = ({
     reader.readAsText(file);
   };
 
-  return (
-    <div className={`fixed bottom-4 right-4 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg shadow-lg p-4 z-30`}>
-      <div className="flex items-center space-x-2 mb-3">
-        <FileText className="w-5 h-5 text-purple-600" />
-        <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-          GEDCOM Import/Export
-        </h3>
-      </div>
-      
-      <div className="flex space-x-2">
-        <button
-          onClick={exportToGedcom}
-          className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Download className="w-4 h-4" />
-          <span>Export</span>
-        </button>
-        
-        <label className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors cursor-pointer">
-          <Upload className="w-4 h-4" />
-          <span>{importing ? 'Importing...' : 'Import'}</span>
-          <input
-            type="file"
-            accept=".ged,.gedcom"
-            onChange={handleImport}
-            className="hidden"
-            disabled={importing}
-          />
-        </label>
-      </div>
-    </div>
-  );
-};
+  const triggerImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.ged,.gedcom';
+    input.onchange = (e) => handleImport(e as any);
+    input.click();
+  };
+
+  return {
+    importing,
+    exportToGedcom,
+    triggerImport,
+  };
+}

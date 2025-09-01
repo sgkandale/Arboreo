@@ -1,4 +1,4 @@
-import { Search, Users, Calendar, Moon, Sun, ChevronDown, BarChart3, TreePine, Bell, LogOut } from 'lucide-react';
+import { Search, Users, Calendar, Moon, Sun, ChevronDown, BarChart3, TreePine, Bell, LogOut, Upload, Download } from 'lucide-react';
 import { ViewMode } from '../types/FamilyTree';
 import { useEffect, useRef, useState } from 'react';
 
@@ -11,6 +11,8 @@ interface HeaderProps {
   onDarkModeToggle: () => void;
   onEventsToggle: () => void;
   onLogout: () => void;
+  onImport: () => void;
+  onExport: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -21,10 +23,14 @@ export const Header: React.FC<HeaderProps> = ({
   darkMode,
   onDarkModeToggle,
   onEventsToggle,
-  onLogout
+  onLogout,
+  onImport,
+  onExport,
 }) => {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [viewDropdownOpen, setViewDropdownOpen] = useState(false);
+  const [importExportDropdownOpen, setImportExportDropdownOpen] = useState(false);
+  const viewDropdownRef = useRef<HTMLDivElement>(null);
+  const importExportDropdownRef = useRef<HTMLDivElement>(null);
 
   const viewOptions = [
     { value: 'graph', label: 'Graph View', icon: Users },
@@ -37,8 +43,11 @@ export const Header: React.FC<HeaderProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setDropdownOpen(false);
+      if (viewDropdownRef.current && !viewDropdownRef.current.contains(event.target as Node)) {
+        setViewDropdownOpen(false);
+      }
+      if (importExportDropdownRef.current && !importExportDropdownRef.current.contains(event.target as Node)) {
+        setImportExportDropdownOpen(false);
       }
     };
 
@@ -72,9 +81,9 @@ export const Header: React.FC<HeaderProps> = ({
             />
           </div>
 
-          <div className="relative" ref={dropdownRef}>
+          <div className="relative" ref={viewDropdownRef}>
             <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
+              onClick={() => setViewDropdownOpen(!viewDropdownOpen)}
               className={`flex items-center space-x-2 px-4 py-2 border rounded-lg transition-colors ${
                 darkMode 
                   ? 'bg-gray-800 border-gray-600 text-white hover:bg-gray-700' 
@@ -86,7 +95,7 @@ export const Header: React.FC<HeaderProps> = ({
               <ChevronDown className="w-4 h-4" />
             </button>
 
-            {dropdownOpen && (
+            {viewDropdownOpen && (
               <div className={`absolute right-0 mt-2 w-56 border rounded-lg shadow-lg z-50 ${
                 darkMode 
                   ? 'bg-gray-800 border-gray-600' 
@@ -97,7 +106,7 @@ export const Header: React.FC<HeaderProps> = ({
                     key={option.value}
                     onClick={() => {
                       onViewModeChange(option.value as ViewMode);
-                      setDropdownOpen(false);
+                      setViewDropdownOpen(false);
                     }}
                     className={`w-full flex items-center space-x-3 px-4 py-3 text-left transition-colors ${
                       viewMode === option.value
@@ -109,6 +118,48 @@ export const Header: React.FC<HeaderProps> = ({
                     <span>{option.label}</span>
                   </button>
                 ))}
+              </div>
+            )}
+          </div>
+
+          <div className="relative" ref={importExportDropdownRef}>
+            <button
+              onClick={() => setImportExportDropdownOpen(!importExportDropdownOpen)}
+              className={`flex items-center space-x-2 px-4 py-2 border rounded-lg transition-colors ${
+                darkMode 
+                  ? 'bg-gray-800 border-gray-600 text-white hover:bg-gray-700' 
+                  : 'bg-white border-gray-300 text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              <Upload className="w-4 h-4" />
+              <span>Import/Export</span>
+              <ChevronDown className="w-4 h-4" />
+            </button>
+
+            {importExportDropdownOpen && (
+              <div className={`absolute right-0 mt-2 w-56 border rounded-lg shadow-lg z-50 ${
+                darkMode 
+                  ? 'bg-gray-800 border-gray-600' 
+                  : 'bg-white border-gray-200'
+              }`}>
+                <button
+                  onClick={() => { onImport(); setImportExportDropdownOpen(false); }}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 text-left transition-colors ${
+                    darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>Import GEDCOM</span>
+                </button>
+                <button
+                  onClick={() => { onExport(); setImportExportDropdownOpen(false); }}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 text-left transition-colors ${
+                    darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Export GEDCOM</span>
+                </button>
               </div>
             )}
           </div>

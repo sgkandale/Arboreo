@@ -12,12 +12,12 @@ import Login from './components/Login';
 import { Header } from './components/Header';
 import { Sidebar } from 'lucide-react';
 import { EventsSidebar } from './components/EventsSidebar';
-import { GedcomImportExport } from './components/GedcomImportExport';
 import { FamilyGraph } from './components/FamilyGraph';
 import { Legend } from './components/Legend';
 import { StatisticsDashboard } from './components/StatisticsDashboard';
 import useToast from './hooks/useToast';
 import Toast from './components/Toast';
+import useGedcom from './hooks/useGedcom';
 
 export default function HomePage() {
   const [people, setPeople] = useState<Person[]>([]);
@@ -34,6 +34,17 @@ export default function HomePage() {
   const [showNodeSetupDialog, setShowNodeSetupDialog] = useState(false);
   const [loading, setLoading] = useState(true);
   const { showToast, toastMessage, show, hide } = useToast();
+  const { importing, exportToGedcom, triggerImport } = useGedcom(people, (importedPeople) => {
+    setPeople(prev => [...prev, ...importedPeople]);
+    const newActivity = {
+      id: uuidv4(),
+      type: 'added' as const,
+      description: `Imported ${importedPeople.length} family members from GEDCOM file`,
+      timestamp: new Date().toISOString(),
+      personId: importedPeople[0]?.id || ''
+    };
+    setActivities(prev => [newActivity, ...prev]);
+  });
 
   const handleLogin = async (username: string) => {
     try {
@@ -199,18 +210,7 @@ export default function HomePage() {
     }
   }, [eventsSidebarOpen]);
 
-  const handleGedcomImport = useCallback((importedPeople: Person[]) => {
-    setPeople(prev => [...prev, ...importedPeople]);
-    
-    const newActivity = {
-      id: uuidv4(),
-      type: 'added' as const,
-      description: `Imported ${importedPeople.length} family members from GEDCOM file`,
-      timestamp: new Date().toISOString(),
-      personId: importedPeople[0]?.id || ''
-    };
-    setActivities(prev => [newActivity, ...prev]);
-  }, []);
+  
 
   const handleBackgroundClick = useCallback((e: React.MouseEvent) => {
     if (e.target === e.currentTarget && (sidebarOpen || eventsSidebarOpen)) {
@@ -314,6 +314,8 @@ export default function HomePage() {
         onDarkModeToggle={() => setDarkMode(!darkMode)}
         onEventsToggle={handleEventsToggle}
         onLogout={handleLogout}
+        onImport={triggerImport}
+        onExport={exportToGedcom}
       />
       
       <div 
@@ -342,11 +344,7 @@ export default function HomePage() {
           onPersonSelect={handlePersonSelect}
         />
 
-        <GedcomImportExport
-          people={people}
-          darkMode={darkMode}
-          onImport={handleGedcomImport}
-        />
+        
 
         {showNodeSetupDialog && currentUser && (
           <NodeSetupDialog user={currentUser} onSave={handleNodeSave} />
