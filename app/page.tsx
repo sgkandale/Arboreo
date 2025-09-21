@@ -45,7 +45,7 @@ export default function HomePage() {
     };
     setActivities(prev => [newActivity, ...prev]);
   });
-  const { logout, isAuthenticated } = useAuth();
+  const { logout, isAuthenticated, userId } = useAuth();
 
   useEffect(() => {
     const checkSetup = async () => {
@@ -80,7 +80,11 @@ export default function HomePage() {
             throw new Error(error);
           }
           const data = await response.json();
-          setPeople(data.people);
+          const peopleWithMainUser = data.people.map((person: Person) => ({
+            ...person,
+            isMainUser: person.id === userId,
+          }));
+          setPeople(peopleWithMainUser);
           setActivities(data.activities);
         } catch (error) {
           show((error as Error).message);
