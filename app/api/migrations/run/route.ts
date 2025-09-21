@@ -32,6 +32,12 @@ export async function POST(req: Request) {
           name TEXT,
           gender TEXT,
           dob TEXT,
+          deathDate TEXT,
+          location TEXT,
+          profession TEXT,
+          biography TEXT,
+          contactInfo TEXT,
+          photo TEXT,
           parents TEXT,
           spouse TEXT,
           children TEXT

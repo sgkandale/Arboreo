@@ -7,12 +7,18 @@ export async function POST(req: Request) {
 
   return new Promise((resolve) => {
     db.run(
-      'INSERT OR REPLACE INTO family_data (id, name, gender, dob, parents, spouse, children) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      'INSERT OR REPLACE INTO family_data (id, name, gender, dob, deathDate, location, profession, biography, contactInfo, photo, parents, spouse, children) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         person.id,
         person.name,
         person.gender,
         person.dateOfBirth,
+        person.deathDate || null,
+        person.location || null,
+        person.profession || null,
+        person.biography || null,
+        person.contactInfo ? JSON.stringify(person.contactInfo) : null,
+        person.photo || null,
         JSON.stringify(person.parents || []),
         JSON.stringify(person.spouse || []),
         JSON.stringify(person.children || []),
