@@ -12,7 +12,16 @@ export async function GET() {
       }
       db.close();
       const data = rows.map(row => ({
-        ...row,
+        id: row.id,
+        name: row.name,
+        gender: row.gender,
+        dateOfBirth: row.dob, // Map dob to dateOfBirth
+        deathDate: row.deathDate,
+        location: row.location,
+        profession: row.profession,
+        biography: row.biography,
+        contactInfo: row.contactInfo ? JSON.parse(row.contactInfo) : undefined,
+        photo: row.photo,
         parents: JSON.parse(row.parents),
         spouse: JSON.parse(row.spouse),
         children: JSON.parse(row.children),

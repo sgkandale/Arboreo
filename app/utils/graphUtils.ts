@@ -1,4 +1,4 @@
-import { Person, FamilyNode, FamilyLink, AgeGroup } from '../types/FamilyTree';
+import { Person, FamilyNode, Event, AgeGroup, FamilyStatistics } from '../types/FamilyTree';
 
 export const getAgeGroup = (dateOfBirth: string): AgeGroup => {
   const birthDate = new Date(dateOfBirth);
