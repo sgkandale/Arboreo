@@ -1,19 +1,25 @@
-import type { Metadata } from "next";
-import "./globals.css";
+'use client';
 
-export const metadata: Metadata = {
-  title: "Arboreo Family Tree",
-  description: "Visualize your family tree",
-};
+import "./globals.css";
+import useAuth from './hooks/useAuth';
+import Login from './components/Login';
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { isAuthenticated, login } = useAuth();
+
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {!isAuthenticated ? (
+          <Login onLogin={login} />
+        ) : (
+          children
+        )}
+      </body>
     </html>
   );
 }

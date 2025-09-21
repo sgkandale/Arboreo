@@ -2,7 +2,7 @@ import { useState } from 'react';
 import useToast from '../hooks/useToast';
 import Toast from './Toast';
 
-export default function Setup({ onSetupComplete }: { onSetupComplete: (username: string) => void }) {
+export default function Setup({ onSetupComplete }: { onSetupComplete: () => void }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -22,7 +22,9 @@ export default function Setup({ onSetupComplete }: { onSetupComplete: (username:
       });
 
       if (res.ok) {
-        onSetupComplete(username);
+        const { token } = await res.json();
+        localStorage.setItem('token', token);
+        onSetupComplete();
       } else {
         const { error } = await res.json();
         throw new Error(error);

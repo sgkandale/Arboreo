@@ -2,7 +2,7 @@ import { useState } from 'react';
 import useToast from '../hooks/useToast';
 import Toast from './Toast';
 
-export default function Login({ onLogin }: { onLogin: (username: string) => void }) {
+export default function Login({ onLogin }: { onLogin: (token: string) => void }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -19,7 +19,9 @@ export default function Login({ onLogin }: { onLogin: (username: string) => void
       });
 
       if (res.ok) {
-        onLogin(username);
+        const { token } = await res.json();
+        localStorage.setItem('token', token);
+        onLogin(token);
       } else {
         const { error } = await res.json();
         throw new Error(error);
@@ -43,7 +45,9 @@ export default function Login({ onLogin }: { onLogin: (username: string) => void
       });
 
       if (res.ok) {
-        onLogin(username);
+        const { token } = await res.json();
+        localStorage.setItem('token', token);
+        onLogin(token);
       } else {
         const { error } = await res.json();
         throw new Error(error);

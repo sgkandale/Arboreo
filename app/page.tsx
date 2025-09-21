@@ -18,6 +18,7 @@ import { StatisticsDashboard } from './components/StatisticsDashboard';
 import useToast from './hooks/useToast';
 import Toast from './components/Toast';
 import useGedcom from './hooks/useGedcom';
+import useAuth from './hooks/useAuth';
 
 export default function HomePage() {
   const [people, setPeople] = useState<Person[]>([]);
@@ -29,7 +30,6 @@ export default function HomePage() {
   const [viewMode, setViewMode] = useState<ViewMode>('graph');
   const [darkMode, setDarkMode] = useState(false);
   const [setupComplete, setSetupComplete] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<Person | null>(null);
   const [showNodeSetupDialog, setShowNodeSetupDialog] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -45,24 +45,7 @@ export default function HomePage() {
     };
     setActivities(prev => [newActivity, ...prev]);
   });
-
-  const handleLogin = async (username: string) => {
-    try {
-      setLoggedIn(true);
-      const res = await fetch(`/api/user?username=${username}`);
-      if (!res.ok) {
-        const { error } = await res.json();
-        throw new Error(error);
-      }
-      const { user, person } = await res.json();
-      setCurrentUser(user);
-      if (!person) {
-        setShowNodeSetupDialog(true);
-      }
-    } catch (error) {
-      show((error as Error).message);
-    }
-  };
+  const { logout, isAuthenticated } = useAuth();
 
   useEffect(() => {
     const checkSetup = async () => {
@@ -88,7 +71,7 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    if (loggedIn) {
+    if (isAuthenticated) {
       const fetchData = async () => {
         try {
           const response = await fetch('/api/family');
@@ -105,7 +88,7 @@ export default function HomePage() {
       };
       fetchData();
     }
-  }, [loggedIn]);
+  }, [isAuthenticated]);
 
   const upcomingEvents = generateUpcomingEvents(people);
 
@@ -286,25 +269,18 @@ export default function HomePage() {
   };
 
   const handleLogout = useCallback(() => {
-    setLoggedIn(false);
+    logout();
     setPeople([]);
     setActivities([]);
     setSelectedPerson(null);
-  }, []);
+  }, [logout]);
 
   if (loading) {
     return <div>Loading...</div>;
   }
 
   if (!setupComplete) {
-    return <Setup onSetupComplete={(username) => { 
-      setSetupComplete(true);
-      handleLogin(username); 
-    }} />;
-  }
-
-  if (!loggedIn) {
-    return <Login onLogin={handleLogin} />;
+    return <Setup onSetupComplete={() => setSetupComplete(true)} />;
   }
 
   return (
